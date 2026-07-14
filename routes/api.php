@@ -30,4 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/donors/{donor}', [DonorController::class, 'show']);
     Route::put('/admin/donors/{donor}', [DonorController::class, 'update']);
     Route::delete('/admin/donors/{donor}', [DonorController::class, 'destroy']);
+
+    Route::get('/admin/donations', [DonationController::class, 'adminIndex']);
+    Route::put('/admin/donations/{donation}', [DonationController::class, 'updateStatus']);
 });
