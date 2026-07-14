@@ -50,14 +50,14 @@ class DonationController extends Controller
     public function updateStatus(Request $request, Donation $donation)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
+            'status' => 'required|in:completed,cancelled',
         ]);
 
         $donation->update(['status' => $validated['status']]);
 
         // On approval, update the donor's record: mark last donation date,
         // and set them unavailable while they recover
-        if ($validated['status'] === 'approved') {
+        if ($validated['status'] === 'completed') {
             $donation->donor->update([
                 'last_donation_date' => $donation->donation_date,
                 'available' => false,
