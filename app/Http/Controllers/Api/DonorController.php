@@ -5,16 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Donor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class DonorController extends Controller
 {
-    // Public: register as a donor
+    // Public: register as a donor (creates account + logs them in)
     public function store(Request $request)
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:donors,email',
+            'password' => 'required|string|min:8',
             'phone' => 'required|string|max:20',
             'blood_group' => ['required', Rule::in(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])],
             'age' => 'required|integer|min:18|max:65',
@@ -24,11 +26,20 @@ class DonorController extends Controller
             'last_donation_date' => 'nullable|date',
         ]);
 
+        $validated['password'] = Hash::make($validated['password']);
+
         $donor = Donor::create($validated);
+
+        $token = $donor->createToken('donor-token')->plainTextToken;
 
         return response()->json([
             'message' => 'Registration successful. Thank you for becoming a donor!',
-            'donor' => $donor,
+            'token' => $token,
+            'donor' => [
+                'id' => $donor->id,
+                'full_name' => $donor->full_name,
+                'email' => $donor->email,
+            ],
         ], 201);
     }
 
@@ -55,25 +66,24 @@ class DonorController extends Controller
     }
 
     /**
- * Public endpoint: available donor counts per blood type.
- * Returns [{ type: 'A+', units: 1 }, { type: 'O-', units: 0 }, ...]
- */
-public function inventory()
-{
-    $types = ['O-', 'O+', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+     * Public endpoint: available donor counts per blood type.
+     */
+    public function inventory()
+    {
+        $types = ['O-', 'O+', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
-    $counts = Donor::where('available', true)
-        ->selectRaw('blood_group, COUNT(*) as units')
-        ->groupBy('blood_group')
-        ->pluck('units', 'blood_group');
+        $counts = Donor::where('available', true)
+            ->selectRaw('blood_group, COUNT(*) as units')
+            ->groupBy('blood_group')
+            ->pluck('units', 'blood_group');
 
-    $result = collect($types)->map(fn ($type) => [
-        'type' => $type,
-        'units' => $counts[$type] ?? 0,
-    ]);
+        $result = collect($types)->map(fn ($type) => [
+            'type' => $type,
+            'units' => $counts[$type] ?? 0,
+        ]);
 
-    return response()->json($result);
-}
+        return response()->json($result);
+    }
 
     // Admin only: view single donor
     public function show(Donor $donor)
@@ -81,7 +91,7 @@ public function inventory()
         return response()->json($donor);
     }
 
-    // Admin only: update donor (e.g. mark unavailable, update last donation date)
+    // Admin only: update donor
     public function update(Request $request, Donor $donor)
     {
         $validated = $request->validate([

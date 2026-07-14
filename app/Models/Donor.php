@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Donor extends Model
+class Donor extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens;
 
     protected $fillable = [
         'full_name',
         'email',
+        'password',
         'phone',
         'blood_group',
         'age',
@@ -22,8 +24,18 @@ class Donor extends Model
         'available',
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     protected $casts = [
         'available' => 'boolean',
         'last_donation_date' => 'date',
+        'password' => 'hashed',
     ];
+
+    public function donations()
+    {
+        return $this->hasMany(Donation::class);
+    }
 }
