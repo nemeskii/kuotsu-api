@@ -16,7 +16,7 @@ Route::get('/blood-inventory', [DonorController::class, 'inventory']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/donor/logout', [DonorAuthController::class, 'logout']);
     Route::get('/donor/me', [DonorAuthController::class, 'me']);
-
+    Route::put('/donor/profile', [DonorController::class, 'completeProfile']);
     Route::get('/donations', [DonationController::class, 'index']);
     Route::post('/donations', [DonationController::class, 'store']);
 });
