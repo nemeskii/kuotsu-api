@@ -7,10 +7,9 @@ use App\Models\Donor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\Storage;
 class DonorController extends Controller
 {
-    // Public: register as a donor account (step 1 only)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -19,11 +18,23 @@ class DonorController extends Controller
             'password' => 'required|string|min:8',
             'phone' => 'required|string|max:20',
             'date_of_birth' => 'required|date|before:-18 years|after:-100 years',
+            'government_id' => 'required|digits:12|unique:donors,government_id_number',
+            'government_id_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
-        $donor = Donor::create($validated);
+        $path = $request->file('government_id_document')->store('government-ids', 'local');
+
+        $donor = Donor::create([
+            'full_name' => $validated['full_name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'phone' => $validated['phone'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'government_id_number' => $validated['government_id'],
+            'government_id_image' => $path,
+        ]);
 
         $token = $donor->createToken('donor-token')->plainTextToken;
 
@@ -127,5 +138,14 @@ class DonorController extends Controller
         $donor->delete();
 
         return response()->json(['message' => 'Donor removed']);
+    }
+    // Admin only: securely view a donor's government ID image
+    public function governmentId(Donor $donor)
+    {
+        if (!$donor->government_id_image || !Storage::disk('local')->exists($donor->government_id_image)) {
+            abort(404, 'No government ID on file for this donor.');
+        }
+
+        return Storage::disk('local')->response($donor->government_id_image);
     }
 }

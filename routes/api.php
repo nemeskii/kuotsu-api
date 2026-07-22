@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\DonorAuthController;
 use App\Http\Controllers\Api\DonationController;
 use Illuminate\Support\Facades\Route;
 
+\DB::listen(function ($query) {
+    \Log::info($query->sql . ' — ' . $query->time . 'ms');
+});
+
 // Public routes
 Route::post('/register', [DonorController::class, 'store']);
 Route::post('/donor/login', [DonorAuthController::class, 'login']);
@@ -33,4 +37,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/admin/donations', [DonationController::class, 'adminIndex']);
     Route::put('/admin/donations/{donation}', [DonationController::class, 'updateStatus']);
+    Route::get('/admin/donors/{donor}/government-id', [DonorController::class, 'governmentId']);
 });

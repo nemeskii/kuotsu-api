@@ -11,18 +11,21 @@ class Donor extends Authenticatable
     use HasFactory, HasApiTokens;
 
     protected $fillable = [
-        'full_name',
-        'email',
-        'password',
-        'phone',
-        'blood_group',
-        'age',
-        'gender',
-        'city',
-        'address',
-        'last_donation_date',
-        'available',
-    ];
+    'full_name',
+    'email',
+    'password',
+    'phone',
+    'date_of_birth',
+    'government_id_number',
+    'government_id_image',
+    'blood_group',
+    'age',
+    'gender',
+    'city',
+    'address',
+    'last_donation_date',
+    'available',
+];
 
     protected $hidden = [
         'password',
