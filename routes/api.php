@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\DonorAuthController;
 use App\Http\Controllers\Api\DonationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\OtpController;
+
+Route::post('/otp/send', [OtpController::class, 'send']);
+Route::post('/otp/verify', [OtpController::class, 'verify']);
 
 \DB::listen(function ($query) {
     \Log::info($query->sql . ' — ' . $query->time . 'ms');

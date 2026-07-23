@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use App\Models\OtpVerification;
 class DonorController extends Controller
 {
     public function store(Request $request)
@@ -21,6 +22,16 @@ class DonorController extends Controller
             'government_id' => 'required|digits:12|unique:donors,government_id_number',
             'government_id_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
+
+        $verified = OtpVerification::where('email', $validated['email'])
+    ->where('verified', true)
+    ->exists();
+ 
+if (!$verified) {
+    return response()->json([
+        'message' => 'Please verify your email before registering.',
+    ], 422);
+}
 
         $validated['password'] = Hash::make($validated['password']);
 
