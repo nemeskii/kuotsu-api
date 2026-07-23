@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DonorAuthController;
 use App\Http\Controllers\Api\DonationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OtpController;
+use App\Http\Controllers\Api\BloodRequestController;
 
 Route::post('/otp/send', [OtpController::class, 'send']);
 Route::post('/otp/verify', [OtpController::class, 'verify']);
@@ -19,6 +20,8 @@ Route::post('/register', [DonorController::class, 'store']);
 Route::post('/donor/login', [DonorAuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::get('/blood-inventory', [DonorController::class, 'inventory']);
+Route::get('/blood-search', [DonorController::class, 'search']);
+Route::post('/blood-requests', [BloodRequestController::class, 'store']);
 
 // Protected donor routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -42,4 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/donations', [DonationController::class, 'adminIndex']);
     Route::put('/admin/donations/{donation}', [DonationController::class, 'updateStatus']);
     Route::get('/admin/donors/{donor}/government-id', [DonorController::class, 'governmentId']);
+
+    Route::get('/admin/blood-requests', [BloodRequestController::class, 'index']);
+    Route::put('/admin/blood-requests/{bloodRequest}', [BloodRequestController::class, 'updateStatus']);
 });

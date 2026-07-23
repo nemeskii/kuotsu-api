@@ -122,6 +122,44 @@ if (!$verified) {
         return response()->json($result);
     }
 
+    /**
+     * Public endpoint: search available donor counts by blood group and/or city.
+     * Returns aggregate counts only — no donor names, contact info, or IDs.
+     */
+    public function search(Request $request)
+    {
+        $request->validate([
+            'blood_group' => ['nullable', Rule::in(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])],
+            'city' => 'nullable|string|max:255',
+        ]);
+
+        $query = Donor::where('available', true);
+
+        if ($request->filled('blood_group')) {
+            $query->where('blood_group', $request->blood_group);
+        }
+
+        if ($request->filled('city')) {
+            $query->where('city', 'like', '%' . $request->city . '%');
+        }
+
+        $total = (clone $query)->count();
+
+        $byCity = (clone $query)
+            ->whereNotNull('city')
+            ->selectRaw('city, COUNT(*) as count')
+            ->groupBy('city')
+            ->orderByDesc('count')
+            ->get();
+
+        return response()->json([
+            'blood_group' => $request->blood_group,
+            'city' => $request->city,
+            'total' => $total,
+            'by_city' => $byCity,
+        ]);
+    }
+
     // Admin only: view single donor
     public function show(Donor $donor)
     {
