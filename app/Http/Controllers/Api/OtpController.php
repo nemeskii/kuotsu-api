@@ -40,8 +40,9 @@ class OtpController extends Controller
         ]);
 
         if ($response->failed()) {
-            return response()->json(['message' => 'Failed to send verification code.'], 500);
-        }
+    \Log::error('EmailJS failed', ['response' => $response->body()]);
+    return response()->json(['message' => 'Failed to send verification code.', 'debug' => $response->body()], 500);
+}
 
         return response()->json(['message' => 'Verification code sent.']);
     }
