@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OtpMail;
 use App\Models\Donor;
 use App\Models\OtpVerification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 
 class OtpController extends Controller
 {
@@ -28,7 +27,21 @@ class OtpController extends Controller
             'expires_at' => now()->addMinutes(10),
         ]);
 
-        Mail::to($request->email)->send(new OtpMail($code));
+        $response = Http::post('https://api.emailjs.com/api/v1.0/email/send', [
+            'service_id' => env('EMAILJS_SERVICE_ID'),
+            'template_id' => env('EMAILJS_TEMPLATE_ID'),
+            'user_id' => env('EMAILJS_PUBLIC_KEY'),
+            'accessToken' => env('EMAILJS_PRIVATE_KEY'),
+            'template_params' => [
+                'email' => $request->email,
+                'passcode' => $code,
+                'time' => now()->addMinutes(10)->format('h:i A'),
+            ],
+        ]);
+
+        if ($response->failed()) {
+            return response()->json(['message' => 'Failed to send verification code.'], 500);
+        }
 
         return response()->json(['message' => 'Verification code sent.']);
     }
